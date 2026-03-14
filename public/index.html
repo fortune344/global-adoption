@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Global Adoption – Soumettez votre demande d'adoption en ligne. Un organisme d'adoption internationale de confiance dédié à la mise en relation des familles avec les enfants dans le besoin.">
+    <title>Formulaire de demande d'adoption – Global Adoption</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+</head>
+<body>
+
+    <!-- CAPTCHA Gate: verification avant d'acceder au formulaire -->
+    <div class="captcha-gate" id="captchaGate">
+        <div class="captcha-gate-overlay"></div>
+        <div class="captcha-gate-card">
+            <div class="gate-logo"><span>G</span></div>
+            <h2>Global Adoption</h2>
+            <p>Avant d'accéder au formulaire de demande d'adoption, veuillez confirmer que vous n'êtes pas un robot.</p>
+            <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" data-callback="onCaptchaSuccess"></div>
+            <br>
+            <button type="button" class="gate-btn" id="gateBtn" onclick="openForm()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M5 12h14"/><polyline points="12,5 19,12 12,19"/></svg>
+                Accéder au formulaire
+            </button>
+        </div>
+    </div>
+
+    <!-- Background overlay -->
+    <div class="bg-overlay"></div>
+
+    <!-- Header -->
+    <header class="site-header">
+        <div class="header-inner">
+            <div class="logo">
+                <div class="logo-icon-adopt">
+                    <span>G</span>
+                </div>
+                <div class="logo-text">
+                    <span class="logo-name">Global Adoption</span>
+                    <span class="logo-tagline">Donnez un foyer à un enfant</span>
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- Main content -->
+    <main class="main-content">
+        <div class="form-card">
+            <!-- Form header -->
+            <div class="form-header">
+                <h1>Formulaire de demande d'adoption</h1>
+
+            </div>
+
+            <!-- Progress bar -->
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-steps">
+                    <div class="step active" data-step="1">
+                        <div class="step-circle">1</div>
+                        <span>Infos Personnelles</span>
+                    </div>
+                    <div class="step" data-step="2">
+                        <div class="step-circle">2</div>
+                        <span>Famille & Pro</span>
+                    </div>
+                    <div class="step" data-step="3">
+                        <div class="step-circle">3</div>
+                        <span>Projet d'Adoption</span>
+                    </div>
+                    <div class="step" data-step="4">
+                        <div class="step-circle">4</div>
+                        <span>Documents</span>
+                    </div>
+                    <div class="step" data-step="5">
+                        <div class="step-circle">5</div>
+                        <span>Déclaration</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form -->
+            <form id="adoptionForm" novalidate>
+
+
+                <!-- SECTION 1: Personal Information -->
+                <fieldset class="form-section active" id="section1">
+                    <legend class="section-title">
+                        <span class="section-number">1</span>
+                        Informations Personnelles
+                    </legend>
+
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label for="fullName">Nom complet <span class="required">*</span></label>
+                            <input type="text" id="fullName" name="fullName" placeholder="Entrez votre nom complet légal" required>
+                            <span class="error-msg" id="fullNameError"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="dob">Date de naissance <span class="required">*</span></label>
+                            <input type="date" id="dob" name="dob" required>
+                            <span class="error-msg" id="dobError"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="pob">Lieu de naissance <span class="required">*</span></label>
+                            <input type="text" id="pob" name="pob" placeholder="Ville, Pays" required>
+                            <span class="error-msg" id="pobError"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="nationality">Nationalité <span class="required">*</span></label>
+                            <input type="text" id="nationality" name="nationality" placeholder="Votre nationalité" required>
+                            <span class="error-msg" id="nationalityError"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="maritalStatus">État civil <span class="required">*</span></label>
+                            <select id="maritalStatus" name="maritalStatus" required>
+                                <option value="" disabled selected>Sélectionnez votre état</option>
+                                <option value="single">Célibataire</option>
+                                <option value="married">Marié(e)</option>
+                                <option value="civil_union">Pacsé(e) / Union civile</option>
+                                <option value="divorced">Divorcé(e)</option>
+                                <option value="widowed">Veuf(ve)</option>
+                            </select>
+                            <span class="error-msg" id="maritalStatusError"></span>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="address">Adresse complète <span class="required">*</span></label>
+                            <input type="text" id="address" name="address" placeholder="Rue, Ville, Code postal, Pays" required>
+                            <span class="error-msg" id="addressError"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone">Numéro de téléphone <span class="required">*</span></label>
+                            <input type="tel" id="phone" name="phone" placeholder="+33 6 00 00 00 00" required>
+                            <span class="error-msg" id="phoneError"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Adresse e-mail <span class="required">*</span></label>
+                            <input type="email" id="email" name="email" placeholder="votre@email.com" required>
+                            <span class="error-msg" id="emailError"></span>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- SECTION 2: Family and Professional Situation -->
+                <fieldset class="form-section" id="section2">
+                    <legend class="section-title">
+                        <span class="section-number">2</span>
+                        Situation Familiale & Professionnelle
+                    </legend>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="dependentChildren">Nombre d'enfants à charge <span class="required">*</span></label>
+                            <input type="number" id="dependentChildren" name="dependentChildren" min="0" max="20" placeholder="0" required>
+                            <span class="error-msg" id="dependentChildrenError"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="profession">Profession <span class="required">*</span></label>
+                            <input type="text" id="profession" name="profession" placeholder="Votre profession actuelle" required>
+                            <span class="error-msg" id="professionError"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="employer">Employeur / Activité professionnelle <span class="required">*</span></label>
+                            <input type="text" id="employer" name="employer" placeholder="Nom de l'entreprise ou activité" required>
+                            <span class="error-msg" id="employerError"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="income">Revenu mensuel estimé <span class="required">*</span></label>
+                            <div class="input-with-prefix">
+                                <span class="input-prefix">€</span>
+                                <input type="number" id="income" name="income" placeholder="5000" min="0" required>
+                            </div>
+                            <span class="error-msg" id="incomeError"></span>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="housingType">Type de logement <span class="required">*</span></label>
+                            <div class="radio-group">
+                                <label class="radio-card">
+                                    <input type="radio" name="housingType" value="apartment" required>
+                                    <div class="radio-card-content">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="2" width="16" height="20" rx="2"/><rect x="8" y="6" width="3" height="3"/><rect x="13" y="6" width="3" height="3"/><rect x="8" y="11" width="3" height="3"/><rect x="13" y="11" width="3" height="3"/><rect x="10" y="17" width="4" height="5"/></svg>
+                                        <span>Appartement</span>
+                                    </div>
+                                </label>
+                                <label class="radio-card">
+                                    <input type="radio" name="housingType" value="house">
+                                    <div class="radio-card-content">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+                                        <span>Maison</span>
+                                    </div>
+                                </label>
+                                <label class="radio-card">
+                                    <input type="radio" name="housingType" value="other">
+                                    <div class="radio-card-content">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r=".5" fill="currentColor"/></svg>
+                                        <span>Autre</span>
+                                    </div>
+                                </label>
+                            </div>
+                            <span class="error-msg" id="housingTypeError"></span>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- SECTION 3: Adoption Project -->
+                <fieldset class="form-section" id="section3">
+                    <legend class="section-title">
+                        <span class="section-number">3</span>
+                        Projet d'Adoption
+                    </legend>
+
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label for="motivation">Pourquoi souhaitez-vous adopter un enfant ? <span class="required">*</span></label>
+                            <textarea id="motivation" name="motivation" rows="5" placeholder="Veuillez partager vos motivations, votre situation familiale, et ce que vous espérez offrir à un enfant par l'adoption…" required></textarea>
+                            <div class="char-count"><span id="motivationCount">0</span> / 2000 caractères</div>
+                            <span class="error-msg" id="motivationError"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="adoptionType">Type d'adoption <span class="required">*</span></label>
+                            <select id="adoptionType" name="adoptionType" required>
+                                <option value="" disabled selected>Sélectionnez le type</option>
+                                <option value="national">Nationale</option>
+                                <option value="international">Internationale</option>
+                            </select>
+                            <span class="error-msg" id="adoptionTypeError"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="preferredAge">Âge souhaité de l'enfant <span class="required">*</span></label>
+                            <select id="preferredAge" name="preferredAge" required>
+                                <option value="" disabled selected>Sélectionnez la tranche d'âge</option>
+                                <option value="0-1">0 – 1 an</option>
+                                <option value="1-3">1 – 3 ans</option>
+                                <option value="3-6">3 – 6 ans</option>
+                                <option value="6-10">6 – 10 ans</option>
+                                <option value="10+">10+ ans</option>
+                                <option value="no_preference">Sans préférence</option>
+                            </select>
+                            <span class="error-msg" id="preferredAgeError"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="preferredGender">Sexe souhaité</label>
+                            <select id="preferredGender" name="preferredGender">
+                                <option value="" disabled selected>Sélectionnez une préférence</option>
+                                <option value="male">Masculin</option>
+                                <option value="female">Féminin</option>
+                                <option value="no_preference">Sans préférence</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="preferredCountry">Pays d'origine souhaité</label>
+                            <input type="text" id="preferredCountry" name="preferredCountry" placeholder="ex : Colombie, Éthiopie, Chine…">
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label>Êtes-vous disposé(e) à adopter un enfant ayant des besoins spécifiques ? <span class="required">*</span></label>
+                            <div class="toggle-group">
+                                <label class="toggle-option">
+                                    <input type="radio" name="specialNeeds" value="yes" required>
+                                    <span class="toggle-label">Oui</span>
+                                </label>
+                                <label class="toggle-option">
+                                    <input type="radio" name="specialNeeds" value="no">
+                                    <span class="toggle-label">Non</span>
+                                </label>
+                            </div>
+                            <span class="error-msg" id="specialNeedsError"></span>
+                        </div>
+
+                        <div class="form-group full-width hidden" id="specialNeedsDetails">
+                            <label for="specialNeedsSpec">Si oui, veuillez préciser</label>
+                            <textarea id="specialNeedsSpec" name="specialNeedsSpec" rows="3" placeholder="Veuillez décrire les types de besoins spécifiques que vous êtes ouvert(e) à considérer…"></textarea>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- SECTION 4: Required Documents -->
+                <fieldset class="form-section" id="section4">
+                    <legend class="section-title">
+                        <span class="section-number">4</span>
+                        Documents Requis
+                    </legend>
+
+                    <p class="section-note">Veuillez télécharger des copies claires des documents suivants. Formats acceptés : PDF, JPG, PNG (max 5 Mo chacun).</p>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="idDocument">Pièce d'identité <span class="required">*</span></label>
+                            <div class="file-upload" id="idDocumentUpload">
+                                <input type="file" id="idDocument" name="idDocument" accept=".pdf,.jpg,.jpeg,.png" required>
+                                <div class="file-upload-content">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                    <span class="file-label">Cliquez pour télécharger ou glissez-déposez</span>
+                                    <span class="file-hint">PDF, JPG, PNG – Max 5 Mo</span>
+                                </div>
+                                <span class="file-name"></span>
+                            </div>
+                            <span class="error-msg" id="idDocumentError"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="proofAddress">Justificatif de domicile <span class="required">*</span></label>
+                            <div class="file-upload" id="proofAddressUpload">
+                                <input type="file" id="proofAddress" name="proofAddress" accept=".pdf,.jpg,.jpeg,.png" required>
+                                <div class="file-upload-content">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                    <span class="file-label">Cliquez pour télécharger ou glissez-déposez</span>
+                                    <span class="file-hint">PDF, JPG, PNG – Max 5 Mo</span>
+                                </div>
+                                <span class="file-name"></span>
+                            </div>
+                            <span class="error-msg" id="proofAddressError"></span>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="financialCert">Attestation professionnelle ou financière <span class="required">*</span></label>
+                            <div class="file-upload" id="financialCertUpload">
+                                <input type="file" id="financialCert" name="financialCert" accept=".pdf,.jpg,.jpeg,.png" required>
+                                <div class="file-upload-content">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                    <span class="file-label">Cliquez pour télécharger ou glissez-déposez</span>
+                                    <span class="file-hint">PDF, JPG, PNG – Max 5 Mo</span>
+                                </div>
+                                <span class="file-name"></span>
+                            </div>
+                            <span class="error-msg" id="financialCertError"></span>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- SECTION 5: Declaration -->
+                <fieldset class="form-section" id="section5">
+                    <legend class="section-title">
+                        <span class="section-number">5</span>
+                        Déclaration
+                    </legend>
+
+                    <div class="declaration-box">
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="declaration" name="declaration" required>
+                                <span class="checkmark"></span>
+                                <span class="checkbox-text">Je certifie que les informations fournies sont exactes et j'accepte que ma demande soit examinée par l'équipe de Global Adoption. Je comprends que fournir de fausses informations peut entraîner le rejet de ma demande.</span>
+                            </label>
+                            <span class="error-msg" id="declarationError"></span>
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="signature">Signature (Nom complet tapé) <span class="required">*</span></label>
+                                <input type="text" id="signature" name="signature" class="signature-input" placeholder="Tapez votre nom complet légal" required>
+                                <span class="error-msg" id="signatureError"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="signatureDate">Date <span class="required">*</span></label>
+                                <input type="date" id="signatureDate" name="signatureDate" required>
+                                <span class="error-msg" id="signatureDateError"></span>
+                            </div>
+                        </div>
+
+                    </div>
+                </fieldset>
+
+                <!-- Navigation buttons -->
+                <div class="form-navigation">
+                    <button type="button" class="btn btn-secondary" id="prevBtn" style="display:none;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><polyline points="12,19 5,12 12,5"/></svg>
+                        Précédent
+                    </button>
+                    <button type="button" class="btn btn-primary" id="nextBtn">
+                        Étape Suivante
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><polyline points="12,5 19,12 12,19"/></svg>
+                    </button>
+                    <button type="submit" class="btn btn-submit" id="submitBtn" style="display:none;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                        Soumettre la Demande
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Success modal -->
+        <div class="modal-overlay" id="successModal">
+            <div class="modal-content">
+                <div class="modal-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+                </div>
+                <h2>Demande soumise avec succès !</h2>
+                <p>Merci pour votre demande d'adoption. Notre équipe examinera votre dossier et vous contactera dans les <strong>10 jours ouvrables</strong>.</p>
+                <p class="modal-ref">Référence : <span id="refNumber"></span></p>
+                <button class="btn btn-primary" onclick="location.reload()">Fermer</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer" style="padding: 24px; text-align: center; border-top: 1px solid var(--border); margin-top: 40px;">
+        <p style="font-size: .85rem; color: var(--text-light);">&copy; 2026 Global Adoption. Tous droits réservés.</p>
+    </footer>
+
+    <script>
+        // CAPTCHA Gate logic
+        function onCaptchaSuccess() {
+            document.getElementById('gateBtn').classList.add('enabled');
+        }
+        function openForm() {
+            document.getElementById('captchaGate').classList.add('hidden');
+        }
+    </script>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel d'Administration – Global Adoption</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+    <style>
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+        :root {
+            --primary: #2B6CB0; --primary-light: #4299E1; --primary-dark: #1A4A7A; --primary-bg: #EBF4FF;
+            --accent: #48BB78; --accent-dark: #2F855A;
+            --text: #2D3748; --text-light: #718096; --text-lighter: #A0AEC0;
+            --bg: #F7FAFC; --white: #FFFFFF; --border: #E2E8F0;
+            --error: #E53E3E; --warning: #DD6B20;
+            --font: 'Inter', -apple-system, sans-serif;
+            --font-display: 'Playfair Display', Georgia, serif;
+            --shadow: 0 4px 20px rgba(0,0,0,.06); --radius: 12px;
+        }
+        body { font-family: var(--font); color: var(--text); background: var(--bg); min-height: 100vh; }
+
+        /* ═══════ LOGIN SCREEN ═══════ */
+        .login-screen {
+            position: fixed; inset: 0; z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, #1A365D 0%, #2B6CB0 40%, #4299E1 100%);
+            overflow: hidden;
+        }
+        .login-screen.hidden { display: none; }
+
+        /* Animated background circles */
+        .login-bg-circle {
+            position: absolute; border-radius: 50%;
+            background: rgba(255,255,255,.04);
+            animation: floatCircle 20s ease-in-out infinite;
+        }
+        .login-bg-circle:nth-child(1) { width: 400px; height: 400px; top: -100px; right: -100px; animation-delay: 0s; }
+        .login-bg-circle:nth-child(2) { width: 300px; height: 300px; bottom: -80px; left: -60px; animation-delay: -7s; }
+        .login-bg-circle:nth-child(3) { width: 200px; height: 200px; top: 40%; left: 10%; animation-delay: -14s; }
+        @keyframes floatCircle {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -20px) scale(1.05); }
+            66% { transform: translate(-20px, 15px) scale(.95); }
+        }
+
+        .login-card {
+            position: relative; z-index: 1;
+            background: var(--white); border-radius: 20px;
+            padding: 48px 44px; max-width: 420px; width: 90%;
+            box-shadow: 0 25px 60px rgba(0,0,0,.3);
+            animation: loginAppear .6s cubic-bezier(.4,0,.2,1);
+        }
+        @keyframes loginAppear {
+            from { opacity: 0; transform: translateY(30px) scale(.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .login-logo {
+            width: 56px; height: 56px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 16px; display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 24px;
+            box-shadow: 0 8px 24px rgba(43,108,176,.3);
+        }
+        .login-logo span { color: var(--white); font-size: 1.6rem; font-weight: 700; }
+
+        .login-card h1 {
+            font-family: var(--font-display); font-size: 1.5rem; font-weight: 700;
+            color: var(--text); text-align: center; margin-bottom: 6px;
+        }
+        .login-card .login-subtitle {
+            font-size: .88rem; color: var(--text-light); text-align: center; margin-bottom: 32px;
+        }
+
+        .login-field { margin-bottom: 18px; }
+        .login-field label {
+            display: block; font-size: .82rem; font-weight: 600; color: var(--text);
+            margin-bottom: 6px;
+        }
+        .login-field .input-wrapper {
+            position: relative; display: flex; align-items: center;
+        }
+        .login-field .input-icon {
+            position: absolute; left: 14px; color: var(--text-lighter);
+            width: 18px; height: 18px; pointer-events: none;
+        }
+        .login-field input {
+            width: 100%; padding: 12px 16px 12px 42px;
+            border: 1.5px solid var(--border); border-radius: 10px;
+            font-family: var(--font); font-size: .9rem; color: var(--text);
+            background: var(--white); outline: none; transition: all .2s;
+        }
+        .login-field input:focus { border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(66,153,225,.15); }
+        .login-field input::placeholder { color: var(--text-lighter); }
+
+        .login-error {
+            display: none; padding: 10px 14px; margin-bottom: 16px;
+            background: #FFF5F5; border: 1px solid #FED7D7; border-radius: 8px;
+            font-size: .82rem; color: var(--error); text-align: center;
+        }
+        .login-error.visible { display: block; animation: shake .4s ease; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+
+        .login-btn {
+            width: 100%; padding: 14px; margin-top: 6px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: var(--white); border: none; border-radius: 10px;
+            font-family: var(--font); font-size: .95rem; font-weight: 600;
+            cursor: pointer; transition: all .25s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .login-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(43,108,176,.35); }
+        .login-btn:active { transform: translateY(0); }
+        .login-btn:disabled { opacity: .7; cursor: not-allowed; transform: none; }
+        .login-btn .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,.3); border-top-color: white; border-radius: 50%; animation: spin .6s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .login-footer {
+            margin-top: 28px; text-align: center; font-size: .78rem; color: var(--text-lighter);
+        }
+
+        /* ═══════ ADMIN PANEL ═══════ */
+        .admin-wrapper { display: none; }
+        .admin-wrapper.visible { display: block; }
+
+        .admin-header {
+            background: var(--white); border-bottom: 1px solid var(--border);
+            padding: 16px 32px; display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 100;
+        }
+        .admin-header h1 { font-family: var(--font-display); font-size: 1.3rem; color: var(--primary-dark); }
+        .admin-header span { font-size: .85rem; color: var(--text-light); }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .back-link, .logout-link {
+            text-decoration: none; font-size: .85rem; font-weight: 500;
+            padding: 6px 14px; border-radius: 6px; cursor: pointer; transition: all .2s;
+            border: none; background: none; font-family: var(--font);
+        }
+        .back-link { color: var(--primary); }
+        .logout-link { color: var(--error); background: #FFF5F5; }
+        .logout-link:hover { background: var(--error); color: var(--white); }
+
+        .stats-bar { display: flex; gap: 16px; padding: 24px 32px; flex-wrap: wrap; }
+        .stat-card { background: var(--white); border-radius: var(--radius); padding: 20px 24px; flex: 1; min-width: 160px; box-shadow: var(--shadow); border-left: 4px solid var(--primary); }
+        .stat-card.pending { border-left-color: var(--warning); }
+        .stat-card.approved { border-left-color: var(--accent); }
+        .stat-card.rejected { border-left-color: var(--error); }
+        .stat-value { font-size: 2rem; font-weight: 700; }
+        .stat-label { font-size: .78rem; color: var(--text-light); text-transform: uppercase; letter-spacing: .05em; margin-top: 2px; }
+
+        .table-container { padding: 0 32px 32px; }
+        .table-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 12px; }
+        .table-header h2 { font-size: 1.1rem; font-weight: 600; }
+        .table-actions { display: flex; align-items: center; gap: 10px; }
+        .search-box { padding: 8px 16px; border: 1.5px solid var(--border); border-radius: 8px; font-family: var(--font); font-size: .88rem; outline: none; width: 260px; transition: border-color .2s; }
+        .search-box:focus { border-color: var(--primary-light); }
+
+        .btn-export {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 18px; border: 1.5px solid var(--accent); border-radius: 8px;
+            background: var(--white); color: var(--accent-dark);
+            font-family: var(--font); font-size: .82rem; font-weight: 600;
+            cursor: pointer; transition: all .2s; white-space: nowrap;
+        }
+        .btn-export:hover { background: var(--accent); color: var(--white); }
+        .btn-export svg { width: 16px; height: 16px; }
+
+        .data-table { width: 100%; background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; border-collapse: collapse; }
+        .data-table thead { background: #F8FAFC; }
+        .data-table th { text-align: left; padding: 14px 16px; font-size: .75rem; font-weight: 600; color: var(--text-light); text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--border); }
+        .data-table td { padding: 14px 16px; font-size: .88rem; border-bottom: 1px solid #F1F5F9; vertical-align: middle; }
+        .data-table tr:hover { background: #FAFBFE; }
+        .data-table tr:last-child td { border-bottom: none; }
+
+        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 100px; font-size: .75rem; font-weight: 600; }
+        .status-pending { background: #FFFBEB; color: #D97706; }
+        .status-under-review { background: #EBF4FF; color: #2563EB; }
+        .status-approved { background: #F0FFF4; color: #16A34A; }
+        .status-rejected { background: #FFF5F5; color: #DC2626; }
+        .status-on-hold { background: #F5F3FF; color: #7C3AED; }
+
+        .btn-sm { padding: 6px 14px; border: none; border-radius: 6px; font-family: var(--font); font-size: .78rem; font-weight: 600; cursor: pointer; transition: all .2s; }
+        .btn-view { background: var(--primary-bg); color: var(--primary); }
+        .btn-view:hover { background: var(--primary); color: var(--white); }
+        .btn-delete { background: #FFF5F5; color: var(--error); margin-left: 6px; }
+        .btn-delete:hover { background: var(--error); color: var(--white); }
+
+        .empty-state { text-align: center; padding: 60px 24px; color: var(--text-lighter); }
+        .empty-state svg { width: 64px; height: 64px; margin-bottom: 16px; opacity: .4; }
+
+        /* Modal */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity .2s; padding: 20px; }
+        .modal-overlay.show { opacity: 1; pointer-events: all; }
+        .modal-body { background: var(--white); border-radius: var(--radius); max-width: 700px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 0; }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 28px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--white); z-index: 1; }
+        .modal-header h2 { font-size: 1.1rem; font-weight: 600; }
+        .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-light); padding: 4px 8px; }
+        .modal-section { padding: 20px 28px; border-bottom: 1px solid #F1F5F9; }
+        .modal-section:last-child { border-bottom: none; }
+        .modal-section h3 { font-size: .82rem; font-weight: 600; color: var(--primary); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 14px; }
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .detail-item { display: flex; flex-direction: column; gap: 2px; }
+        .detail-item.full-width { grid-column: 1 / -1; }
+        .detail-label { font-size: .72rem; color: var(--text-lighter); text-transform: uppercase; letter-spacing: .04em; }
+        .detail-value { font-size: .9rem; color: var(--text); word-break: break-word; }
+
+        .doc-cards { display: flex; flex-direction: column; gap: 10px; }
+        .doc-card { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #F8FAFC; border: 1px solid var(--border); border-radius: 8px; transition: all .2s; }
+        .doc-card:hover { border-color: var(--primary-light); }
+        .doc-card-info { display: flex; align-items: center; gap: 10px; }
+        .doc-card-info svg { width: 20px; height: 20px; color: var(--primary); flex-shrink: 0; }
+        .doc-card-info span { font-size: .85rem; font-weight: 500; }
+        .doc-card-actions { display: flex; gap: 6px; }
+        .doc-btn { display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border: none; border-radius: 6px; font-family: var(--font); font-size: .75rem; font-weight: 600; cursor: pointer; transition: all .2s; text-decoration: none; }
+        .doc-btn-view { background: var(--primary-bg); color: var(--primary); }
+        .doc-btn-view:hover { background: var(--primary); color: var(--white); }
+        .doc-btn-dl { background: #F0FFF4; color: var(--accent-dark); }
+        .doc-btn-dl:hover { background: var(--accent); color: var(--white); }
+        .doc-btn svg { width: 14px; height: 14px; }
+        .doc-download-all { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; margin-top: 12px; background: var(--primary); color: var(--white); border: none; border-radius: 8px; font-family: var(--font); font-size: .82rem; font-weight: 600; cursor: pointer; transition: all .2s; }
+        .doc-download-all:hover { background: var(--primary-dark); }
+        .doc-download-all svg { width: 16px; height: 16px; }
+
+        .status-select { padding: 6px 12px; border: 1.5px solid var(--border); border-radius: 6px; font-family: var(--font); font-size: .82rem; font-weight: 600; cursor: pointer; outline: none; }
+        .modal-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 20px 28px; background: #F8FAFC; border-top: 1px solid var(--border); }
+        .modal-footer-left { display: flex; align-items: center; gap: 12px; }
+        .modal-footer-right { display: flex; align-items: center; gap: 8px; }
+        .btn-pdf { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; background: var(--error); color: var(--white); border: none; border-radius: 8px; font-family: var(--font); font-size: .82rem; font-weight: 600; cursor: pointer; transition: all .2s; }
+        .btn-pdf:hover { background: #C53030; }
+        .btn-pdf svg { width: 16px; height: 16px; }
+        .no-docs { color: var(--text-lighter); font-size: .88rem; }
+
+        @media (max-width: 768px) {
+            .stats-bar, .table-container { padding-left: 16px; padding-right: 16px; }
+            .admin-header { padding: 12px 16px; flex-wrap: wrap; gap: 8px; }
+            .detail-grid { grid-template-columns: 1fr; }
+            .table-header { flex-direction: column; align-items: stretch; }
+            .table-actions { flex-direction: column; }
+            .search-box { width: 100%; }
+            .modal-footer { flex-direction: column; align-items: stretch; }
+            .modal-footer-left, .modal-footer-right { justify-content: center; }
+            .doc-card { flex-direction: column; align-items: stretch; gap: 8px; }
+            .doc-card-actions { justify-content: flex-end; }
+            .login-card { padding: 36px 28px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ═══════ LOGIN SCREEN ═══════ -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-bg-circle"></div>
+        <div class="login-bg-circle"></div>
+        <div class="login-bg-circle"></div>
+
+        <div class="login-card">
+            <div class="login-logo"><span>G</span></div>
+            <h1>Global Adoption</h1>
+            <p class="login-subtitle">Connectez-vous au panel d'administration</p>
+
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="login-field">
+                    <label for="loginUser">Identifiant</label>
+                    <div class="input-wrapper">
+                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        <input type="text" id="loginUser" placeholder="Votre identifiant" autocomplete="username" required>
+                    </div>
+                </div>
+                <div class="login-field">
+                    <label for="loginPass">Mot de passe</label>
+                    <div class="input-wrapper">
+                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <input type="password" id="loginPass" placeholder="Votre mot de passe" autocomplete="current-password" required>
+                    </div>
+                </div>
+
+                <div class="login-error" id="loginError">Identifiant ou mot de passe incorrect.</div>
+
+                <button type="submit" class="login-btn" id="loginBtn">
+                    Se connecter
+                </button>
+            </form>
+
+            <div class="login-footer">&copy; 2026 Global Adoption – Espace réservé aux administrateurs</div>
+        </div>
+    </div>
+
+    <!-- ═══════ ADMIN PANEL ═══════ -->
+    <div class="admin-wrapper" id="adminWrapper">
+        <header class="admin-header">
+            <div>
+                <h1>Global Adoption – Administration</h1>
+                <span>Gérer toutes les demandes d'adoption</span>
+            </div>
+            <div class="header-right">
+                <a href="/" class="back-link">Voir le Formulaire</a>
+                <button type="button" class="logout-link" onclick="logout()">Déconnexion</button>
+            </div>
+        </header>
+
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-value" id="totalCount">0</div>
+                <div class="stat-label">Total des Demandes</div>
+            </div>
+            <div class="stat-card pending">
+                <div class="stat-value" id="pendingCount">0</div>
+                <div class="stat-label">En Attente</div>
+            </div>
+            <div class="stat-card approved">
+                <div class="stat-value" id="approvedCount">0</div>
+                <div class="stat-label">Approuvées</div>
+            </div>
+            <div class="stat-card rejected">
+                <div class="stat-value" id="rejectedCount">0</div>
+                <div class="stat-label">Rejetées</div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="table-header">
+                <h2>Demandes</h2>
+                <div class="table-actions">
+                    <input type="text" class="search-box" id="searchBox" placeholder="Rechercher par nom, e-mail, réf...">
+                    <button type="button" class="btn-export" onclick="exportExcel()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        Exporter Excel
+                    </button>
+                </div>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Réf</th><th>Nom Complet</th><th>E-mail</th>
+                        <th>Type</th><th>Soumise le</th><th>Statut</th><th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+
+            <div class="empty-state" id="emptyState" style="display:none;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+                <p>Aucune demande pour le moment</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal-body" id="modalBody"></div>
+    </div>
+
+    <script>
+        const { jsPDF } = window.jspdf;
+        let allApplications = [];
+
+        // ── Auth helpers ──
+        function getAuthHeader() {
+            const creds = sessionStorage.getItem('admin_creds');
+            return creds ? { 'Authorization': 'Basic ' + creds } : {};
+        }
+
+        function authFetch(url, opts = {}) {
+            opts.headers = { ...opts.headers, ...getAuthHeader() };
+            return fetch(url, opts);
+        }
+
+        // ── Login ──
+        async function handleLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            const errEl = document.getElementById('loginError');
+            const user = document.getElementById('loginUser').value;
+            const pass = document.getElementById('loginPass').value;
+
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner"></div> Connexion...';
+            errEl.classList.remove('visible');
+
+            try {
+                const res = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: user, password: pass })
+                });
+
+                if (!res.ok) throw new Error('bad');
+
+                // Store Base64 credentials for API calls
+                sessionStorage.setItem('admin_creds', btoa(user + ':' + pass));
+                showAdmin();
+            } catch {
+                errEl.classList.add('visible');
+                document.getElementById('loginPass').value = '';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Se connecter';
+            }
+        }
+
+        function showAdmin() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('adminWrapper').classList.add('visible');
+            loadApplications();
+        }
+
+        function logout() {
+            sessionStorage.removeItem('admin_creds');
+            document.getElementById('adminWrapper').classList.remove('visible');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('loginUser').value = '';
+            document.getElementById('loginPass').value = '';
+        }
+
+        // Auto-login if session exists
+        if (sessionStorage.getItem('admin_creds')) {
+            showAdmin();
+        }
+
+        // ── Helpers ──
+        function esc(str) { if (!str) return '–'; const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+        function formatDate(d) { if (!d) return '–'; return new Date(d).toLocaleDateString('fr-FR', { day:'numeric', month:'short', year:'numeric' }); }
+        function statusClass(s) { return (s || '').toLowerCase().replace(/\s+/g, '-'); }
+        function translateStatus(s) { return {'Pending':'En Attente','Under Review':'En Examen','Approved':'Approuvée','Rejected':'Rejetée','On Hold':'En Pause'}[s] || s; }
+        function translateMarital(v) { return {'single':'Célibataire','married':'Marié(e)','civil_union':'Pacsé(e) / Union civile','divorced':'Divorcé(e)','widowed':'Veuf(ve)'}[v] || v; }
+        function translateHousing(v) { return {'apartment':'Appartement','house':'Maison','other':'Autre'}[v] || v; }
+        function translateAge(v) { return {'0-1':'0–1 an','1-3':'1–3 ans','3-6':'3–6 ans','6-10':'6–10 ans','10+':'10+ ans','no_preference':'Sans préférence'}[v] || v; }
+        function translateGender(v) { return {'male':'Masculin','female':'Féminin','no_preference':'Sans préférence'}[v] || v; }
+        function translateAdoption(v) { return v === 'national' ? 'Nationale' : v === 'international' ? 'Internationale' : '–'; }
+
+        const ICON_FILE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>';
+        const ICON_EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+        const ICON_DL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+        const ICON_PDF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><path d="M9 15v-2h1.5a1.5 1.5 0 0 0 0-3H9v5"/></svg>';
+
+        // ── Load applications ──
+        async function loadApplications() {
+            try {
+                const res = await authFetch('/api/applications');
+                if (res.status === 401) { logout(); return; }
+                if (!res.ok) throw new Error('Erreur serveur');
+                allApplications = await res.json();
+                renderTable(allApplications);
+                updateStats(allApplications);
+            } catch (err) {
+                console.error('Erreur chargement:', err);
+                document.getElementById('tableBody').innerHTML = '';
+                document.getElementById('emptyState').style.display = 'block';
+            }
+        }
+
+        function updateStats(apps) {
+            document.getElementById('totalCount').textContent = apps.length;
+            document.getElementById('pendingCount').textContent = apps.filter(a => a.status === 'Pending').length;
+            document.getElementById('approvedCount').textContent = apps.filter(a => a.status === 'Approved').length;
+            document.getElementById('rejectedCount').textContent = apps.filter(a => a.status === 'Rejected').length;
+        }
+
+        function renderTable(apps) {
+            const tbody = document.getElementById('tableBody');
+            const empty = document.getElementById('emptyState');
+            if (apps.length === 0) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+            empty.style.display = 'none';
+            tbody.innerHTML = apps.map(a => `
+                <tr>
+                    <td><code style="font-size:.78rem;background:#F1F5F9;padding:2px 8px;border-radius:4px;">${esc(a.ref)}</code></td>
+                    <td><strong>${esc(a.full_name)}</strong></td>
+                    <td>${esc(a.email)}</td>
+                    <td>${translateAdoption(a.adoption_type)}</td>
+                    <td>${formatDate(a.submitted_at)}</td>
+                    <td><span class="status-badge status-${statusClass(a.status)}">${translateStatus(a.status)}</span></td>
+                    <td>
+                        <button class="btn-sm btn-view" onclick="viewDetail(${a.id})">Voir</button>
+                        <button class="btn-sm btn-delete" onclick="deleteApp(${a.id})">Supprimer</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // ── View detail ──
+        async function viewDetail(id) {
+            const res = await authFetch(`/api/applications/${id}`);
+            if (res.status === 401) { logout(); return; }
+            const a = await res.json();
+            const docs = [
+                { label: "Piece d Identite", displayLabel: "Pièce d\u2019Identité", url: a.doc_identity },
+                { label: "Justificatif de Domicile", displayLabel: "Justificatif de Domicile", url: a.doc_proof_address },
+                { label: "Attestation Financiere", displayLabel: "Attestation Financière", url: a.doc_financial }
+            ];
+            const docCardsHtml = docs.filter(d => d.url).map((d, i) => `
+                <div class="doc-card">
+                    <div class="doc-card-info">${ICON_FILE}<span>${d.displayLabel}</span></div>
+                    <div class="doc-card-actions">
+                        <a class="doc-btn doc-btn-view" href="${esc(d.url)}" target="_blank" rel="noopener">${ICON_EYE} Voir</a>
+                        <button type="button" class="doc-btn doc-btn-dl" data-url="${esc(d.url)}" data-label="${d.label}" onclick="downloadDoc(this.dataset.url, this.dataset.label)">${ICON_DL} Télécharger</button>
+                    </div>
+                </div>
+            `).join('');
+            const hasAnyDoc = docs.some(d => d.url);
+
+            document.getElementById('modalBody').innerHTML = `
+                <div class="modal-header">
+                    <h2>Demande ${esc(a.ref)}</h2>
+                    <button class="modal-close" onclick="closeModal()">&times;</button>
+                </div>
+                <div class="modal-section"><h3>Informations Personnelles</h3><div class="detail-grid">
+                    <div class="detail-item"><span class="detail-label">Nom Complet</span><span class="detail-value">${esc(a.full_name)}</span></div>
+                    <div class="detail-item"><span class="detail-label">Date de Naissance</span><span class="detail-value">${esc(a.date_of_birth)}</span></div>
+                    <div class="detail-item"><span class="detail-label">Lieu de Naissance</span><span class="detail-value">${esc(a.place_of_birth)}</span></div>
+                    <div class="detail-item"><span class="detail-label">Nationalité</span><span class="detail-value">${esc(a.nationality)}</span></div>
+                    <div class="detail-item"><span class="detail-label">État Civil</span><span class="detail-value">${esc(translateMarital(a.marital_status))}</span></div>
+                    <div class="detail-item full-width"><span class="detail-label">Adresse</span><span class="detail-value">${esc(a.address)}</span></div>
+                    <div class="detail-item"><span class="detail-label">Téléphone</span><span class="detail-value">${esc(a.phone)}</span></div>
+                    <div class="detail-item"><span class="detail-label">E-mail</span><span class="detail-value">${esc(a.email)}</span></div>
+                </div></div>
+                <div class="modal-section"><h3>Situation Familiale & Professionnelle</h3><div class="detail-grid">
+                    <div class="detail-item"><span class="detail-label">Enfants à Charge</span><span class="detail-value">${a.dependent_children}</span></div>
+                    <div class="detail-item"><span class="detail-label">Profession</span><span class="detail-value">${esc(a.profession)}</span></div>
+                    <div class="detail-item"><span class="detail-label">Employeur</span><span class="detail-value">${esc(a.employer)}</span></div>
+                    <div class="detail-item"><span class="detail-label">Revenu Mensuel</span><span class="detail-value">${Number(a.income).toLocaleString()} &euro;</span></div>
+                    <div class="detail-item"><span class="detail-label">Logement</span><span class="detail-value">${esc(translateHousing(a.housing_type))}</span></div>
+                </div></div>
+                <div class="modal-section"><h3>Projet d'Adoption</h3><div class="detail-grid">
+                    <div class="detail-item full-width"><span class="detail-label">Motivation</span><span class="detail-value">${esc(a.motivation)}</span></div>
+                    <div class="detail-item"><span class="detail-label">Type</span><span class="detail-value">${translateAdoption(a.adoption_type)}</span></div>
+                    <div class="detail-item"><span class="detail-label">Âge Souhaité</span><span class="detail-value">${esc(translateAge(a.preferred_age))}</span></div>
+                    <div class="detail-item"><span class="detail-label">Sexe Souhaité</span><span class="detail-value">${esc(translateGender(a.preferred_gender || 'no_preference'))}</span></div>
+                    <div class="detail-item"><span class="detail-label">Pays Souhaité</span><span class="detail-value">${esc(a.preferred_country || 'Sans préférence')}</span></div>
+                    <div class="detail-item"><span class="detail-label">Besoins Spécifiques</span><span class="detail-value">${esc(a.special_needs === 'yes' ? 'Oui' : 'Non')}</span></div>
+                    ${a.special_needs_details ? `<div class="detail-item full-width"><span class="detail-label">Détails</span><span class="detail-value">${esc(a.special_needs_details)}</span></div>` : ''}
+                </div></div>
+                <div class="modal-section"><h3>Documents</h3>
+                    ${hasAnyDoc ? `<div class="doc-cards">${docCardsHtml}</div>
+                    <button type="button" class="doc-download-all" onclick="downloadAllDocs(${a.id})">${ICON_DL} Télécharger tous les documents</button>`
+                    : '<span class="no-docs">Aucun document</span>'}
+                </div>
+                <div class="modal-section"><h3>Déclaration</h3><div class="detail-grid">
+                    <div class="detail-item"><span class="detail-label">Signature</span><span class="detail-value" style="font-family:'Playfair Display',serif;font-style:italic;font-size:1.1rem;">${esc(a.signature)}</span></div>
+                    <div class="detail-item"><span class="detail-label">Date</span><span class="detail-value">${esc(a.signature_date)}</span></div>
+                </div></div>
+                <div class="modal-footer">
+                    <div class="modal-footer-left">
+                        <span style="font-size:.82rem;font-weight:600;color:var(--text-light);">Statut :</span>
+                        <select class="status-select" onchange="updateStatus(${a.id}, this.value)">
+                            <option value="Pending" ${a.status==='Pending'?'selected':''}>En Attente</option>
+                            <option value="Under Review" ${a.status==='Under Review'?'selected':''}>En Examen</option>
+                            <option value="Approved" ${a.status==='Approved'?'selected':''}>Approuvée</option>
+                            <option value="Rejected" ${a.status==='Rejected'?'selected':''}>Rejetée</option>
+                            <option value="On Hold" ${a.status==='On Hold'?'selected':''}>En Pause</option>
+                        </select>
+                    </div>
+                    <div class="modal-footer-right">
+                        <button type="button" class="btn-pdf" onclick="downloadPDF(${a.id})">${ICON_PDF} Dossier PDF</button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('detailModal').classList.add('show');
+        }
+
+        // ── Download single doc ──
+        async function downloadDoc(url, label) {
+            try {
+                const res = await fetch(url);
+                const blob = await res.blob();
+                const ext = url.split('.').pop().split('?')[0] || 'pdf';
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = label.replace(/[^a-zA-Z0-9àâéèêëïîôùûç\s-]/g, '') + '.' + ext;
+                document.body.appendChild(a); a.click(); a.remove();
+                URL.revokeObjectURL(a.href);
+            } catch { alert('Erreur lors du téléchargement.'); }
+        }
+
+        // ── Download all docs ──
+        async function downloadAllDocs(id) {
+            const app = allApplications.find(a => a.id === id); if (!app) return;
+            const docs = [
+                { label: "Piece_Identite", url: app.doc_identity },
+                { label: "Justificatif_Domicile", url: app.doc_proof_address },
+                { label: "Attestation_Financiere", url: app.doc_financial }
+            ];
+            for (const d of docs) {
+                if (d.url) { await downloadDoc(d.url, app.ref + '_' + d.label); await new Promise(r => setTimeout(r, 500)); }
+            }
+        }
+
+        // ── PDF dossier ──
+        async function downloadPDF(id) {
+            const app = allApplications.find(a => a.id === id); if (!app) return;
+            const doc = new jsPDF(); const pw = doc.internal.pageSize.getWidth(); let y = 20;
+
+            doc.setFillColor(43, 108, 176); doc.rect(0, 0, pw, 40, 'F');
+            doc.setTextColor(255,255,255); doc.setFontSize(20); doc.setFont('helvetica','bold');
+            doc.text('Global Adoption', 20, 18);
+            doc.setFontSize(10); doc.setFont('helvetica','normal');
+            doc.text("Dossier de demande d'adoption", 20, 26);
+            doc.setFontSize(9);
+            doc.text('Ref: ' + (app.ref||'–'), 20, 34);
+            doc.text('Statut: ' + translateStatus(app.status), pw-20, 34, {align:'right'});
+            doc.text('Date: ' + formatDate(app.submitted_at), pw-20, 28, {align:'right'});
+            y = 52;
+
+            function addSection(t) { if(y>260){doc.addPage();y=20;} doc.setTextColor(43,108,176); doc.setFontSize(11); doc.setFont('helvetica','bold'); doc.text(t,20,y); doc.setDrawColor(43,108,176); doc.setLineWidth(.5); doc.line(20,y+2,pw-20,y+2); y+=10; }
+            function addRow(l,v) { if(y>275){doc.addPage();y=20;} doc.setTextColor(113,128,150); doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.text(l,20,y); doc.setTextColor(45,55,72); doc.setFontSize(10); const lines=doc.splitTextToSize(String(v||'–'),pw-75); doc.text(lines,75,y); y+=Math.max(lines.length*5,7); }
+
+            addSection('1. INFORMATIONS PERSONNELLES');
+            addRow('Nom complet',app.full_name); addRow('Date de naissance',app.date_of_birth);
+            addRow('Lieu de naissance',app.place_of_birth); addRow('Nationalité',app.nationality);
+            addRow('État civil',translateMarital(app.marital_status)); addRow('Adresse',app.address);
+            addRow('Téléphone',app.phone); addRow('E-mail',app.email); y+=5;
+
+            addSection('2. SITUATION FAMILIALE & PROFESSIONNELLE');
+            addRow('Enfants à charge',app.dependent_children); addRow('Profession',app.profession);
+            addRow('Employeur',app.employer); addRow('Revenu mensuel',Number(app.income).toLocaleString()+' €');
+            addRow('Logement',translateHousing(app.housing_type)); y+=5;
+
+            addSection("3. PROJET D'ADOPTION");
+            addRow("Type d'adoption",translateAdoption(app.adoption_type)); addRow('Âge souhaité',translateAge(app.preferred_age));
+            addRow('Sexe souhaité',translateGender(app.preferred_gender||'no_preference'));
+            addRow('Pays souhaité',app.preferred_country||'Sans préférence');
+            addRow('Besoins spécifiques',app.special_needs==='yes'?'Oui':'Non');
+            if(app.special_needs_details) addRow('Détails',app.special_needs_details);
+            y+=3; addRow('Motivation',app.motivation); y+=5;
+
+            addSection('4. DOCUMENTS JOINTS');
+            if(app.doc_identity) addRow("Pièce d'identité",app.doc_identity);
+            if(app.doc_proof_address) addRow('Justificatif domicile',app.doc_proof_address);
+            if(app.doc_financial) addRow('Attestation financière',app.doc_financial);
+            if(!app.doc_identity&&!app.doc_proof_address&&!app.doc_financial) addRow('','Aucun document');
+            y+=5;
+
+            addSection('5. DÉCLARATION');
+            addRow('Signature',app.signature); addRow('Date de signature',app.signature_date);
+
+            const tp=doc.internal.getNumberOfPages();
+            for(let i=1;i<=tp;i++){doc.setPage(i);doc.setFontSize(7);doc.setTextColor(160,174,192);doc.text('Global Adoption – Document confidentiel – '+new Date().toLocaleDateString('fr-FR'),20,290);doc.text('Page '+i+'/'+tp,pw-20,290,{align:'right'});}
+            doc.save('Dossier_'+(app.ref||'GA')+'.pdf');
+        }
+
+        // ── Export Excel ──
+        function exportExcel() {
+            if (!allApplications.length) { alert('Aucune demande à exporter.'); return; }
+            const data = allApplications.map(a => ({
+                'Référence':a.ref, 'Statut':translateStatus(a.status), 'Date soumission':formatDate(a.submitted_at),
+                'Nom complet':a.full_name, 'Date de naissance':a.date_of_birth, 'Lieu de naissance':a.place_of_birth,
+                'Nationalité':a.nationality, 'État civil':translateMarital(a.marital_status), 'Adresse':a.address,
+                'Téléphone':a.phone, 'E-mail':a.email, 'Enfants à charge':a.dependent_children,
+                'Profession':a.profession, 'Employeur':a.employer, 'Revenu mensuel (€)':a.income,
+                'Logement':translateHousing(a.housing_type), 'Type adoption':translateAdoption(a.adoption_type),
+                'Âge souhaité':translateAge(a.preferred_age), 'Sexe souhaité':translateGender(a.preferred_gender||'no_preference'),
+                'Pays souhaité':a.preferred_country||'', 'Besoins spécifiques':a.special_needs==='yes'?'Oui':'Non',
+                'Motivation':a.motivation, 'Signature':a.signature, 'Date signature':a.signature_date
+            }));
+            const ws = XLSX.utils.json_to_sheet(data);
+            ws['!cols'] = Object.keys(data[0]).map(k => ({ wch: Math.max(k.length+2, 15) }));
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Demandes');
+            XLSX.writeFile(wb, 'Global_Adoption_Demandes_'+new Date().toISOString().slice(0,10)+'.xlsx');
+        }
+
+        // ── Update status ──
+        async function updateStatus(id, status) {
+            try {
+                const res = await authFetch(`/api/applications/${id}/status`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({status}) });
+                if (res.status === 401) { logout(); return; }
+                if (!res.ok) throw new Error();
+                loadApplications();
+            } catch { alert('Erreur lors de la mise à jour du statut.'); }
+        }
+
+        // ── Delete ──
+        async function deleteApp(id) {
+            if (!confirm('Êtes-vous sûr(e) de vouloir supprimer cette demande ? Cette action est irréversible.')) return;
+            try {
+                const res = await authFetch(`/api/applications/${id}`, { method:'DELETE' });
+                if (res.status === 401) { logout(); return; }
+                if (!res.ok) throw new Error();
+                closeModal(); loadApplications();
+            } catch { alert('Erreur lors de la suppression.'); }
+        }
+
+        function closeModal() { document.getElementById('detailModal').classList.remove('show'); }
+        document.getElementById('detailModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+        document.getElementById('searchBox').addEventListener('input', e => {
+            const q = e.target.value.toLowerCase();
+            renderTable(allApplications.filter(a =>
+                (a.full_name||'').toLowerCase().includes(q) || (a.email||'').toLowerCase().includes(q) ||
+                (a.ref||'').toLowerCase().includes(q) || (a.phone||'').includes(q)
+            ));
+        });
+    </script>
+</body>
+</html>
